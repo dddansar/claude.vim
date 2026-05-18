@@ -355,10 +355,8 @@ In keeping the spirit of vibe coding alive, I vibe coded the following modificat
 - You: Now I get the following error: Unknown Claude protocol output: "{"type":"error","error":{"type":"invalid_request_error","message":"prompt is too long: 315952 tokens > 200000 maximum"},"request_id":"req_011CYX2LSayJnEjuQiQYMKcq"}". propose a fix.
 - You: Keep my claude.vim/\*.md files empty as I prefer the default settings and it saves some cost by sending less data through the API. What additional changes do I need to make.
 - You: how can I edit claude.vim to increase the context window form 200k to 1m?
-- You: What latest version should I use for "let g:claude_model"?
 - You: Help me understand what the claude.vim file does by adding a lot of comments. Add comments that explain in detail what each function does.
-- You: Show a map in of how the functions in claude.vim are connected
-- You: Update claude.vim to print the token usage and cost.
+- You: Show a map of how the functions in claude.vim are connected
 - You: How can I modify the system prompt to only have the "You:" line?
 - You: The printed token usage is not accurate, how can I make it more accurate?
 - You: What value should I set 'max_tokens' to?
@@ -373,7 +371,4 @@ Unknown Claude protocol output: "{"type":"error","error":{"type":"invalid_reques
 - You: Add support for OpenAI/ChatGPT and Gemini AIs!
 - You: Add support for claude caching in the claude.vim file. Also implements a recency-sort on the buffers so last edited buffers gets moved to the end as they will break the cache downstream.
 - You: Adaptive thinking is now supported by the API. Add an adaptive thinking option and effort option for Claude AI.
-
-I also manually added a few updates such as the changes to the g:SetupClaudeChatSyntax() function.
-
 

@@ -24,10 +24,8 @@
 "     -H "content-type: application/json" \
 "   You: so how do I update claude.vim to support 1m tokens?
 "   --> Now it gives correct answer
-" You: What latest version should I use for "let g:claude_model"?
 " You: Help me understand what the claude.vim file does by adding a lot of comments. Add comments that explain in detail what each function does.
 " You: Show a map in this chat of how the functions in claude.vim are connected
-" You: Update claude.vim to print the token usage and cost in the chat.
 " You: How can I modify the system prompt to only have the "You:" line?
 " You: The printed token usage is not accurate, how can I make it more accurate?
 " --> took some back and forth to get this one right but it worked in the end.
