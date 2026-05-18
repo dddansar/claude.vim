@@ -199,7 +199,25 @@ let g:claude_batch_api = 0
 " open, you'd need to group the least-edited ones together into a single block
 " without a breakpoint, and put breakpoints only on the last 3 or so. The
 " system prompt would share a breakpoint with the oldest files.
-" let g:claude_caching = 1
+let g:claude_caching = 0
+" When enabled, Claude dynamically decides when and how much to use extended
+" thinking based on task complexity. Supported on Opus 4.7, Opus 4.6,
+" Sonnet 4.6 (and Opus 4.5 with a beta header — handled automatically).
+" Note: switching thinking on/off invalidates message-level cache breakpoints;
+" system prompt and tool definition caches remain unaffected.
+let g:claude_thinking = 0
+" Effort level for adaptive thinking.
+"   "low"   — fast, minimal thinking; good for simple/chat tasks
+"   "medium" — balanced speed, cost, and quality; Anthropic's recommended
+"              default for Sonnet 4.6 agentic/coding workflows
+"   "high"  — deep reasoning; the API default on Opus 4.6 and Sonnet 4.6
+"   "xhigh" — between high and max; available on Opus 4.7 only
+"   "max"   — maximum reasoning depth; available on Opus 4.6 only
+let g:claude_thinking_effort = 'high'
+"   "summarized" — default; returns a condensed summary of Claude's reasoning.
+"                  You are billed for full thinking tokens, not summary tokens.
+"   "omitted"    — no thinking text returned (lower bandwidth, same quality).
+let g:claude_thinking_display = 'summarized'
 "------------------------------------------------------------------------------
 
 
