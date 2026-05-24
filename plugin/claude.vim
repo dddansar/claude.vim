@@ -2208,18 +2208,25 @@ function! s:StreamingChatResponse(delta)
   let [l:chat_bufnr, l:chat_winid, l:current_winid] = s:GetOrCreateChatWindow()
   call win_gotoid(l:chat_winid)
 
+  " Only follow new output if the window was already showing the last line.
+  " If line('w$') < line('$') the user has scrolled up — leave their view
+  " position alone so they can read earlier parts of the response.
+  " Scrolling back to the bottom resumes auto-following automatically.
+  let l:was_at_bottom = (line('w$') >= line('$') - 1)
+
   let l:indent = s:GetClaudeIndent()
   let l:new_lines = split(a:delta, "\n", 1)
 
   if len(l:new_lines) > 0
-    " Update the last line with the first segment of the delta
     let l:last_line = getline('$')
     call setline('$', l:last_line . l:new_lines[0])
-
     call append('$', map(l:new_lines[1:], {_, v -> l:indent . v}))
   endif
 
-  normal! G
+  if l:was_at_bottom
+    normal! G
+  endif
+
   call win_gotoid(l:current_winid)
 endfunction
 

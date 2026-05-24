@@ -171,7 +171,7 @@ let g:ai_web_search_api_key=$BRAVE_API_KEY
 " question in small (or even empty) files and all only keep the relevant
 " code/text to the question.
 let g:claude_use_1m_context = 0
-" Manually save history to ~/claude_history.txt with <leader>cs
+" Manually save (append) history to ~/claude_history.txt with <leader>cs
 nnoremap <leader>cs :w >> ~/claude_history.txt<cr>
 " NOTE: You can see all the current session's token usages with :messages.
 " Enable batch mode. Results come back later (most complete within an hour, results are guaranteed within 24 hours). Uses a polling mechanism to retrieve results (every 30 seconds by default). No tool use during batch. A 50% cost discount is applied during batch mode.
@@ -183,15 +183,15 @@ let g:claude_batch_api = 0
 " write tokens cost 2× base input price; still 0.1× for reads
 " NOTE: caching only activates when the cached prefix meets the model's
 " minimum token threshold (typically 1024–4096 tokens depending on model).
-" NOTE: The plugin sends: system prompt → buffer contents → message history.
-"       - The system prompt is very stable — it'll cache on the first call and
+" NOTE: The plugin sends: system prompt -> buffer contents -> message history.
+"       - The system prompt is very stable - it'll cache on the first call and
 "       hit every subsequent call in the session. This is always a win.
 "       - The buffer contents are prepended to the system prompt as one block.
 "       If you edit a file between messages, that block changes and busts the
 "       cache for everything downstream.
 "       - The message history grows with every turn. The plugin puts
 "       cache_control on the last user message, which means the cache point
-"       moves forward with each exchange — the whole prior conversation gets
+"       moves forward with each exchange - the whole prior conversation gets
 "       cached and the model only pays full price for the new message.
 " The API only allows 4 cache breakpoints per request total. We're already
 " using one on the last user message (conversation history). So you have 3 left
@@ -202,21 +202,21 @@ let g:claude_batch_api = 0
 let g:claude_caching = 0
 " When enabled, Claude dynamically decides when and how much to use extended
 " thinking based on task complexity. Supported on Opus 4.7, Opus 4.6,
-" Sonnet 4.6 (and Opus 4.5 with a beta header — handled automatically).
+" Sonnet 4.6 (and Opus 4.5 with a beta header - handled automatically).
 " Note: switching thinking on/off invalidates message-level cache breakpoints;
 " system prompt and tool definition caches remain unaffected.
 let g:claude_thinking = 0
 " Effort level for adaptive thinking.
-"   "low"   — fast, minimal thinking; good for simple/chat tasks
-"   "medium" — balanced speed, cost, and quality; Anthropic's recommended
+"   "low"    - fast, minimal thinking; good for simple/chat tasks
+"   "medium" - balanced speed, cost, and quality; Anthropic's recommended
 "              default for Sonnet 4.6 agentic/coding workflows
-"   "high"  — deep reasoning; the API default on Opus 4.6 and Sonnet 4.6
-"   "xhigh" — between high and max; available on Opus 4.7 only
-"   "max"   — maximum reasoning depth; available on Opus 4.6 only
+"   "high"   - deep reasoning; the API default on Opus 4.6 and Sonnet 4.6
+"   "xhigh"  - between high and max; available on Opus 4.7 only
+"   "max"    - maximum reasoning depth; available on Opus 4.6 only
 let g:claude_thinking_effort = 'high'
-"   "summarized" — default; returns a condensed summary of Claude's reasoning.
+"   "summarized" - default; returns a condensed summary of Claude's reasoning.
 "                  You are billed for full thinking tokens, not summary tokens.
-"   "omitted"    — no thinking text returned (lower bandwidth, same quality).
+"   "omitted"    - no thinking text returned (lower bandwidth, same quality).
 let g:claude_thinking_display = 'summarized'
 "------------------------------------------------------------------------------
 
@@ -389,4 +389,5 @@ Unknown Claude protocol output: "{"type":"error","error":{"type":"invalid_reques
 - You: Add support for OpenAI/ChatGPT and Gemini AIs!
 - You: Add support for claude caching in the claude.vim file. Also implements a recency-sort on the buffers so last edited buffers gets moved to the end as they will break the cache downstream.
 - You: Adaptive thinking is now supported by the API. Add an adaptive thinking option and effort option for Claude AI.
+" You: When the AI is responding in the vim chat, if I try to scroll up as the AI types, it will bring the screen back down. Is there a way to scroll up to see what was written while the AI is still writing at the bottom of chat?
 
