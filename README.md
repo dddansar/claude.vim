@@ -4,8 +4,22 @@ This plugin is based on [pasky/claude.vim](https://github.com/pasky/claude.vim).
 
 Significant modifications have been made to the original code, and although originally just for Anthropic's Claude AI, this plugin now also supports OpenAI/ChatGPT, Google's Gemini, and even locally running your own AI such as Qwen with Ollama.
 
-For a list of modification see the modifications section at the end of this README.
+Here is a summary of the modifications from pasky/claude.vim:
+- Option to disable chat folding
+- Fixed various errors
+- Option to increase context window from 200k to 1m
+- Fixed accuracy of token usage
+- Improved chat readability
+- Added option to disable tools
+- Improved tool efficiency (less token waste)
+- Added batch option
+- Added support for Ollama/Qwen AI
+- Added support for OpenAI/ChatGPT and Gemini AIs
+- Added support for Claude caching
+- Added support for Claude Adaptive thinking
+- Can scroll up as the AI types
 
+For a full list of modification from pasky/claude.vim see the modifications section at the end of this README.
 
 # Programming with AI API in Vim/Neovim
 
