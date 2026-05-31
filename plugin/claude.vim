@@ -90,7 +90,7 @@ endif
 " Set max_tokens based on your intended output length: 1024–4096 is
 " recommended for typical tasks to balance cost and speed, while 8192–16384+
 " is necessary for heavy tasks like long code generation or deep reasoning.
-" Maximum (New Models): Up to 64K for Sonnet 3.5/4.6, 128K for Opus 4.6.
+" Maximum (New Models): Up to 64K for Sonnet 4.6, 128K for Opus 4.6.
 " Higher values reduces the frequency to tell Claude to continue if the
 " answer it was generating was cut off.
 if !exists('g:ai_max_output_tokens')
@@ -126,8 +126,7 @@ endif
 
 " Adaptive thinking: 0 = disabled, 1 = enabled
 " When enabled, Claude dynamically decides when and how much to use extended
-" thinking based on task complexity. Supported on Opus 4.7, Opus 4.6,
-" Sonnet 4.6 (and Opus 4.5 with a beta header — handled automatically).
+" thinking based on task complexity.
 " Only applies to Claude models via the Anthropic API (not Gemini/OpenAI/Ollama).
 " Note: switching thinking on/off invalidates message-level cache breakpoints;
 " system prompt and tool definition caches remain unaffected.
@@ -139,10 +138,10 @@ endif
 " Supported values (not all levels are valid on every model):
 "   "low"   — fast, minimal thinking; good for simple/chat tasks
 "   "medium" — balanced speed, cost, and quality; Anthropic's recommended
-"              default for Sonnet 4.6 agentic/coding workflows
-"   "high"  — deep reasoning; the API default on Opus 4.6 and Sonnet 4.6
-"   "xhigh" — between high and max; available on Opus 4.7 only
-"   "max"   — maximum reasoning depth; available on Opus 4.6 only
+"              default for agentic/coding workflows
+"   "high"  — deep reasoning; the API default
+"   "xhigh" — between high and max
+"   "max"   — maximum reasoning depth
 " Passing an unsupported level for the active model returns a 400 error.
 if !exists('g:claude_thinking_effort')
   let g:claude_thinking_effort = 'high'
@@ -151,9 +150,7 @@ endif
 " Controls whether thinking content is returned in the response.
 "   "summarized" — default; returns a condensed summary of Claude's reasoning.
 "                  You are billed for full thinking tokens, not summary tokens.
-"   "omitted"    — no thinking text returned (lower bandwidth, same quality).
-" Note: on Opus 4.7 the API default is "omitted"; set "summarized" explicitly
-" to see thinking output. On Opus 4.6 and Sonnet 4.6 the default is "summarized".
+"   "omitted"    — no thinking text returned.
 if !exists('g:claude_thinking_display')
   let g:claude_thinking_display = 'summarized'
 endif
@@ -482,7 +479,7 @@ function! s:ClaudeQueryInternal(messages, system_prompt, tools, stream_callback,
       let l:data['tools'] = a:tools
     endif
 
-    " Adaptive thinking — supported on Opus 4.7, Opus 4.6, Sonnet 4.6.
+    " Adaptive thinking
     " Inject thinking:{type:"adaptive"} and output_config:{effort:...} when
     " g:claude_thinking is enabled. The effort level and display mode are
     " taken from g:claude_thinking_effort and g:claude_thinking_display.
@@ -764,13 +761,7 @@ function! s:HandleStreamOutput(stream_callback, final_callback, channel, msg)
               \ 'input': ''
               \ }
       elseif l:response.type == 'content_block_start' && l:response.content_block.type == 'thinking'
-        " Start of a thinking block — initialise accumulator.
-        " We store both the streaming text (for display) and the signature
-        " (sent back in the next turn so the API can verify the block).
-        " NOTE: thinking content is NOT streamed into the chat buffer inline
-        " because ParseChatBuffer would re-read it as assistant message text
-        " and send it back to the API, corrupting the conversation history.
-        " Instead we write a single collapsed summary line when the block ends.
+        call a:stream_callback("\n\n[thinking...]\n\n")
         let s:current_thinking_block = {
               \ 'type': 'thinking',
               \ 'thinking': '',
@@ -786,9 +777,20 @@ function! s:HandleStreamOutput(stream_callback, final_callback, channel, msg)
           call a:stream_callback(l:response.delta.text)
         elseif l:response.delta.type == 'thinking_delta'
           if exists('s:current_thinking_block')
-            " Accumulate thinking text (needed to pass back for tool-use turns)
-            " but do not stream it to the chat buffer — see note above.
-            let s:current_thinking_block.thinking .= l:response.delta.thinking
+            " let s:current_thinking_block.thinking .= l:response.delta.thinking
+            " Stream each delta live to the messages window.
+            " ^@ (null byte) appears as a newline in thinking deltas; split on
+            " it and emit two blank lines so paragraphs are visually separated.
+            " NOTE: you can view thinking responses with :messages
+            if g:claude_thinking_display ==# 'summarized'
+              for l:tline in split(l:response.delta.thinking, "\n", 1)
+                if l:tline ==# ''
+                  echom ' '
+                else
+                  echom l:tline
+                endif
+              endfor
+            endif
           endif
         elseif l:response.delta.type == 'signature_delta'
           if exists('s:current_thinking_block')
@@ -798,24 +800,9 @@ function! s:HandleStreamOutput(stream_callback, final_callback, channel, msg)
       elseif l:response.type == 'content_block_stop'
         if exists('s:current_tool_call')
           let l:tool_input = json_decode(s:current_tool_call.input)
-          " XXX this is a bit weird layering violation, we should probably call the callback instead
           call s:AppendToolUse(s:current_tool_call.id, s:current_tool_call.name, l:tool_input)
           unlet s:current_tool_call
         elseif exists('s:current_thinking_block')
-          " Thinking block complete. Write a single summary line to the buffer
-          " so the user knows thinking occurred. The line starts with a prefix
-          " that ParseChatBuffer will never treat as a role-delimiter, and
-          " AppendContent will pass it through as inert content — but since it
-          " lands in the assistant message text it would be re-sent. Strip it
-          " in AppendContent via the existing [APPLIED] mechanism isn't ideal.
-          " Simplest safe approach: emit nothing to the buffer; just stash the
-          " block for tool-use injection. If display is 'summarized', show a
-          " one-line note via stream_callback so the user sees thinking happened.
-          if g:claude_thinking_display ==# 'summarized' && !empty(s:current_thinking_block.thinking)
-            let l:thinking_preview = s:current_thinking_block.thinking[:120]
-            let l:thinking_preview = substitute(l:thinking_preview, "\n", ' ', 'g')
-            call a:stream_callback("\n[thinking: " . l:thinking_preview . "...]\n")
-          endif
           if !exists('s:pending_thinking_blocks')
             let s:pending_thinking_blocks = []
           endif
@@ -1318,7 +1305,7 @@ function! g:SetupClaudeChatSyntax()
   hi default link claudeChatYou Todo
   syntax match claudeChatYou /^You:/
 
-  hi default link claudeChatClaude Note
+  hi default   claudeChatClaude cterm=bold gui=bold ctermfg=16 guifg=black ctermbg=46  guibg=green1
   syntax match claudeChatClaude /^[Cc]laude[a-zA-Z0-9._-]*:/
   syntax match claudeChatClaude /^[Qq]wen[a-zA-Z0-9._:-]*\%(\s\)\@=/
   syntax match claudeChatClaude /^[Gg]emini[a-zA-Z0-9._-]*:/
@@ -2065,7 +2052,7 @@ function! s:ProcessCodeBlock(block, all_changes)
   let l:normal_command = get(l:matches, 3, '')
 
   if empty(l:buffername)
-    echom "Warning: No buffer name specified in code block header"
+    " echom "Warning: No buffer name specified in code block header"
     return
   endif
 
@@ -2254,7 +2241,9 @@ function! s:FinalChatResponse()
 endfunction
 
 
+" NOTE: you can view messages with :messages
 function! s:AppendTokenUsage()
+  " prints token usage
   if exists('s:last_token_usage')
 
     let l:pricing_warning = ''

@@ -389,5 +389,6 @@ Unknown Claude protocol output: "{"type":"error","error":{"type":"invalid_reques
 - You: Add support for OpenAI/ChatGPT and Gemini AIs!
 - You: Add support for claude caching in the claude.vim file. Also implements a recency-sort on the buffers so last edited buffers gets moved to the end as they will break the cache downstream.
 - You: Adaptive thinking is now supported by the API. Add an adaptive thinking option and effort option for Claude AI.
-" You: When the AI is responding in the vim chat, if I try to scroll up as the AI types, it will bring the screen back down. Is there a way to scroll up to see what was written while the AI is still writing at the bottom of chat?
+- You: When the AI is responding in the vim chat, if I try to scroll up as the AI types, it will bring the screen back down. Is there a way to scroll up to see what was written while the AI is still writing at the bottom of chat?
+- You: Show the full thinking text when thinking is enabled and print the thinking text in the messages window.
 
