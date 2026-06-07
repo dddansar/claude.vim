@@ -1289,10 +1289,6 @@ endfunction
 
 
 function! g:SetupClaudeChatSyntax()
-  if exists("b:current_syntax")
-    return
-  endif
-
   " syntax include @markdown syntax/markdown.vim
 
   if !empty(g:claude_default_system_prompt)
@@ -1357,7 +1353,9 @@ function! g:SetupClaudeChatSyntax()
   syntax match claudeChatWebLinks "\<www\.[A-Za-z0-9\-._~:/?#\[\]@!$&''()*+,;=%]\+" contains=@NoSpell
   syntax match claudeChatWebLinks '\<\w\+:\/\/[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]\+' contains=@NoSpell
 
-  let b:current_syntax = "claudechat"
+  if !exists("b:current_syntax")
+    let b:current_syntax = "claudechat"
+  endif
 endfunction
 
 
