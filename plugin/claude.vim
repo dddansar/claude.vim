@@ -2401,9 +2401,11 @@ function! s:ClaudeBatchPoll(batch_id, custom_id, timer_id)
 
         call s:AppendResponse(l:text)
         call s:CloseCurrentInteractionCodeBlocks()
-        call append('$', printf('(%s - Token usage - Input: %d (%.4f$), Output: %d (%.4f$), Total: (%.4f$) [batch 50%% discount])',
+        let s:last_token_usage = printf(
+              \ "(%s - Token usage - Input: %d (%.4f$), Output: %d (%.4f$), Total: (%.4f$) [batch 50%% discount applied])",
               \ strftime("%Y-%m-%d %H:%M:%S"),
-              \ l:in_tok, l:in_cost, l:out_tok, l:out_cost, l:in_cost + l:out_cost))
+              \ l:in_tok, l:in_cost, l:out_tok, l:out_cost, l:in_cost + l:out_cost)
+        call s:AppendTokenUsage()
       elseif get(l:result_type, 'type', '') ==# 'errored'
         call s:AppendResponse('Batch request errored: ' . json_encode(get(l:result_type, 'error', {})))
       elseif get(l:result_type, 'type', '') ==# 'expired'
